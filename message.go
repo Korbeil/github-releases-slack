@@ -22,6 +22,11 @@ type MessageResponse struct {
 func messageFromRequest(request Request) ([]byte, error) {
 	template := messageTemplateFromPayloadForChannel(request.Payload, request.Channel)
 
+	if request.Payload.RefType != "tag" {
+		var err error
+		return nil, err
+	}
+
 	return messageFromTemplate(template)
 }
 
@@ -29,7 +34,7 @@ func messageTemplateFromPayloadForChannel(payload Payload, channel string) Messa
 	return MessageTemplateData{
 		payload.Repository.URL,
 		payload.Repository.FullName,
-		payload.Release.Name,
+		payload.Ref,
 		channel,
 	}
 }

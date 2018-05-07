@@ -6,7 +6,8 @@ import (
 )
 
 type Payload struct {
-	Release    PayloadRelease    `json:"release"`
+	Ref        string            `json:"ref"`
+	RefType	   string            `json:"ref_type"`
 	Repository PayloadRepository `json:"repository"`
 	Sender     PayloadSender     `json:"sender"`
 }
