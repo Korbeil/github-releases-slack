@@ -6,13 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"text/template"
+	"regexp"
+	"strings"
 )
 
 type MessageTemplateData struct {
-	URL      string
-	FullName string
-	Version  string
-	Channel  string
+	URL       string
+	FullName  string
+	Version   string
+	Changelog string
+	Channel   string
 }
 
 type MessageResponse struct {
@@ -20,7 +23,14 @@ type MessageResponse struct {
 }
 
 func messageFromRequest(request Request) ([]byte, error) {
-	template := messageTemplateFromPayloadForChannel(request.Payload, request.Channel)
+	// get CHANGELOG contents
+	contents, err := getChangelogContents(request.Payload)
+	if err != nil {
+		return nil, err
+	}
+	contents = getStringInBetween(contents, request.Payload)
+
+	template := messageTemplateFromPayloadForChannel(request.Payload, request.Channel, contents)
 
 	if request.Payload.RefType != "tag" {
 		var err error
@@ -30,11 +40,32 @@ func messageFromRequest(request Request) ([]byte, error) {
 	return messageFromTemplate(template)
 }
 
-func messageTemplateFromPayloadForChannel(payload Payload, channel string) MessageTemplateData {
+func getChangelogContents(payload Payload) (string, error) {
+	var url = "https://raw.githubusercontent.com/" + payload.Repository.FullName + "/" + payload.Ref + "/CHANGELOG.md"
+	var resp, err = http.Get(url)
+	if err == nil {
+		defer resp.Body.Close()
+		contents, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		return string(contents), nil
+	}
+	return "", err
+}
+
+func getStringInBetween(str string, payload Payload) (result string) {
+	r := regexp.MustCompile(`(?s)(##\s\[` + payload.Ref + `\].*?)(##\s\[)?`)
+	res := r.FindStringSubmatch(str)
+	return strings.TrimSpace(res[1])
+}
+
+func messageTemplateFromPayloadForChannel(payload Payload, channel string, changelog string) MessageTemplateData {
 	return MessageTemplateData{
 		payload.Repository.URL,
 		payload.Repository.FullName,
 		payload.Ref,
+		changelog,
 		channel,
 	}
 }
