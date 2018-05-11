@@ -55,7 +55,7 @@ func getChangelogContents(payload Payload) (string, error) {
 }
 
 func getStringInBetween(str string, payload Payload) (result string) {
-	r := regexp.MustCompile(`(?s)(##\s\[` + payload.Ref + `\].*?)(##\s\[)?`)
+	r := regexp.MustCompile(`(?s)(##\s\[` + payload.Ref + `\].*?)(##\s\[)`)
 	res := r.FindStringSubmatch(str)
 	return strings.TrimSpace(res[1])
 }
