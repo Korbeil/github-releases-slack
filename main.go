@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"bytes"
 )
 
 func handle(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -21,7 +22,9 @@ func handle(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, 
 	// Send request to Slack API
 	response, err := postMessageToSlack(message, request.Token)
 	if err != nil || !response.OK {
-		return events.APIGatewayProxyResponse{Body: "Unable to send request to Slack", StatusCode: 500}, nil
+		buffer := bytes.NewBufferString("Unable to send request to Slack - ")
+		buffer.Write(message)
+		return events.APIGatewayProxyResponse{Body: buffer.String(), StatusCode: 500}, nil
 	}
 
 	// Send response
