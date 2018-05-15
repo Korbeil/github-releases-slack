@@ -29,6 +29,7 @@ func messageFromRequest(request Request) ([]byte, error) {
 		return nil, err
 	}
 	contents = getStringInBetween(contents, request.Payload)
+	contents = strings.Replace(contents, `\`, `|`, -1)
 
 	template := messageTemplateFromPayloadForChannel(request.Payload, request.Channel, contents)
 
